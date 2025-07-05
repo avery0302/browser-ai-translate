@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "AI语义翻译",
+  "version": "1.0",
+  "description": "这是一个浏览器右键菜单AI翻译工具，你可以选中网页英文词汇或句子，右键选择 “AI语义翻译” 即可使用OpenAI的顶级翻译功能。",
+  "action": {
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": ["contextMenus", "scripting", "activeTab", "tabs"],
+  "background": {
+    "service_worker": "assets/background.js",
+    "type": "module"
+  },
+  "host_permissions": [
+    "http://localhost:3000/",
+    "https://translate.ruskcode.top/"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["assets/content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

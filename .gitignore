@@ -1,0 +1,9 @@
+
+node_modules
+dist
+dist.zip
+
+.vscode/*
+!.vscode/extensions.json
+.idea
+package-lock.json
