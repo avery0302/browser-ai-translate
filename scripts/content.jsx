@@ -1,31 +1,38 @@
-let popover = null; // 在全局作用域声明 popover
+import React, { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import useStore from "@/store/store";
+import App from "@/App.jsx";
+
+const { setInputText, setTranslation } = useStore.getState();
+
+// 创建popover节点
+window.popover = document.createElement("div");
+popover.style.display = "none";
+popover.style.position = "absolute";
+popover.style.borderRadius = "8px";
+popover.style.overflow = "hidden";
+popover.style.zIndex = "10000";
+popover.style.width = "350px";
+popover.style.height = "150px";
+popover.style.boxShadow = "5px 5px 15px rgba(0, 0, 0, 0.3)";
+// 挂载popover节点
+document.body.appendChild(popover);
+// 挂载app节点
+createRoot(popover).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+);
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log("@监听结果");
-
   // 如果是 SHOW_POPOVER 消息
   if (message.type === "SHOW_POPOVER") {
-    if (!popover) {
-      console.log("@首次");
-      popover = document.createElement("div");
-      popover.style.position = "absolute";
-      popover.style.backgroundColor = "rgba(255,255,255,1)";
-      popover.style.color = "#333333";
-      popover.style.fontSize = "18px";
-      popover.style.padding = "20px";
-      popover.style.borderRadius = "8px";
-      popover.style.zIndex = "10000";
-      popover.style.width = "200px";
-      popover.style.height = "100px";
-      popover.style.boxShadow = "5px 5px 15px rgba(0, 0, 0, 0.3)";
-      document.body.appendChild(popover);
-    }
-    console.log("@非首次");
+    const selection = window.getSelection().toString();
+    setInputText(selection);
+    setTranslation("加载中...");
     // 获取选中区域的位置
     const area = getSelectionArea();
-    console.log("@area", area);
 
-    popover.innerText = "...";
     popover.style.left = `${area.left + area.width / 2 - 100}px`;
     popover.style.top = `${area.top + area.height + 10}px`;
     popover.style.display = "block";
@@ -38,7 +45,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   // 如果是 SHOW_TRANSLATION 消息
   if (message.type === "SHOW_TRANSLATION" && popover) {
-    popover.innerText = message.text; // 更新气泡框的内容
+    setTranslation(message.text);
   }
 });
 

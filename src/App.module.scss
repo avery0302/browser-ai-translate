@@ -1,0 +1,27 @@
+.app{
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 8px 14px;
+  background: white;
+  color : #333333;
+  font-size: 16px;
+  display: flex;
+  flex-direction: column;
+  line-height: 25px;
+
+  .header{
+    height: 24px;
+  }
+
+  .inputText{
+    border-bottom: 1px solid #c9c9c9;
+    flex: 1;
+    padding: 6px 0;
+  }
+
+  .translation{
+    flex: 1;
+    padding: 6px 0;
+  }
+}

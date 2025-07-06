@@ -1,11 +1,23 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
+import Header from "./components/Header/Header.jsx";
+import InputText from "./components/InputText/InputText.jsx";
+import Translation from "./components/Translation/Translation.jsx";
+import styles from "./App.module.scss";
 
 const App = () => {
-  const [translation, setTranslation] = useState("");
-
-  useEffect(() => {}, []);
-
-  return null; // 这里没有直接渲染任何内容到 React 组件的 DOM
+  return (
+    <div className={styles.app}>
+      <div className={styles.header}>
+        <Header />
+      </div>
+      <div className={styles.inputText}>
+        <InputText />
+      </div>
+      <div className={styles.translation}>
+        <Translation />
+      </div>
+    </div>
+  );
 };
 
 export default App;
