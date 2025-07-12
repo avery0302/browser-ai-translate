@@ -7,7 +7,7 @@ function Translation() {
   const [state, setState] = useState({});
 
   useEffect(() => {
-    if (translationRef.current) {
+    if (translationRef.current && window.popover) {
       const translationHeight = translationRef.current.offsetHeight;
       const popoverHeight = parseInt(window.popover.style.height, 10);
       window.popover.style.height = `${popoverHeight - 25 + translationHeight}px`;

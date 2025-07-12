@@ -23,4 +23,12 @@ export default defineConfig({
       "@public": resolve(__dirname, "public"),
     },
   },
+  server: {
+    proxy: {
+      "/api": {
+        // target: "https://translate.ruskcode.top",
+        target: "http://localhost:3000",
+      },
+    },
+  },
 });

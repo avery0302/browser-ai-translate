@@ -33,7 +33,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // 获取选中区域的位置
     const area = getSelectionArea();
 
-    popover.style.left = `${area.left + area.width / 2 - 100}px`;
+    popover.style.left = `${area.left + area.width / 2 - 175}px`;
     popover.style.top = `${area.top + area.height + 10}px`;
     popover.style.display = "block";
 

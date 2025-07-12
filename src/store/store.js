@@ -6,6 +6,10 @@ const useStore = create((set) => ({
   setInputText: (newText) => set({ inputText: newText }),
   translation: "",
   setTranslation: (newText) => set({ translation: newText }),
+  aiVoice: true,
+  setAIVoice: (newVal) => set({ aiVoice: newVal }),
+  aiTranslate: true,
+  setAITranslate: (newVal) => set({ aiTranslate: newVal }),
 }));
 
 export default useStore;
