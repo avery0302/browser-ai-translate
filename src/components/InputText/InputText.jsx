@@ -2,48 +2,41 @@ import { useEffect, useRef, useState } from "react";
 import useStore from "@/store/store.js";
 import styles from "./InputText.module.scss";
 import voice from "@/assets/svg/voice.svg";
-import { getTTS } from "@/utils/tool.js";
-
-let audioUrl;
+import loading from "@/assets/svg/loading.svg";
+import { getTranslation, playGoogleTTS, playWebTTS } from "@/utils/tool.js";
+import { globalVar } from "@/store/globalVar.js";
 
 function InputText() {
-  const { inputText, aiVoice } = useStore();
+  const { inputText, aiVoiceChecked, aiTranslateChecked, voiceLoading } =
+    useStore();
+  const { setTranslation, setVoiceLoading } = useStore.getState();
   const inputTextRef = useRef(null);
   const [state, setState] = useState({});
 
-  const playWebTTS = () => {
-    speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(inputText);
-    utterance.lang = "en-US";
-    utterance.rate = 1.2;
-    utterance.volume = 0.4;
-    utterance.voice = speechSynthesis
-      .getVoices()
-      .find((v) => v.name === "Google US English");
-    speechSynthesis.speak(utterance);
-  };
-
-  async function playGoogleTTS() {
-    if (!audioUrl) {
-      audioUrl = await getTTS(inputText);
+  async function playTTS() {
+    setVoiceLoading(true);
+    if (aiVoiceChecked) {
+      await playGoogleTTS(inputText);
+    } else {
+      await playWebTTS(inputText);
     }
-    const audio = new Audio(audioUrl); // 一个实例只能播放一次
-    audio.volume = 0.5;
-    audio.play();
+    setVoiceLoading(false);
   }
 
-  function playTTS() {
-    if (aiVoice) {
-      playGoogleTTS();
-    } else {
-      playWebTTS();
-    }
+  async function updateTranslation() {
+    const model = !aiTranslateChecked
+      ? "google/gemma-3-4b-it:free"
+      : "openai/gpt-4.1-nano";
+    setTranslation("加载中...");
+    const translation = await getTranslation(inputText, model);
+    setTranslation(translation);
   }
 
   useEffect(() => {
     if (inputTextRef.current && window.popover && inputText) {
-      audioUrl = undefined;
+      globalVar.audioUrl = undefined;
       playTTS();
+      updateTranslation();
       const inputTextHeight = inputTextRef.current.offsetHeight;
       window.popover.style.height = `${inputTextHeight + 25 + 72}px`;
     }
@@ -52,7 +45,15 @@ function InputText() {
   return (
     <div className={styles.inputText}>
       <div className={styles.voiceBox}>
-        <img onClick={playTTS} src={voice}></img>
+        {voiceLoading ? (
+          <div className={styles.imgBackground}>
+            <img className={styles.loading} src={loading}></img>
+          </div>
+        ) : (
+          <div className={styles.imgBackground}>
+            <img className={styles.speaker} onClick={playTTS} src={voice}></img>
+          </div>
+        )}
       </div>
       <div className={styles.inputText} ref={inputTextRef}>
         {inputText}

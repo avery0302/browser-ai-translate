@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import useStore from "@/store/store.js";
+import styles from "./Translation.module.scss";
 
 function Translation() {
   const { translation } = useStore();
@@ -14,7 +15,11 @@ function Translation() {
     }
   }, [translation]);
 
-  return <div ref={translationRef}>{translation}</div>;
+  return (
+    <div className={styles.translation} ref={translationRef}>
+      {translation}
+    </div>
+  );
 }
 
 export default Translation;

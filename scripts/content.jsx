@@ -25,11 +25,9 @@ createRoot(popover).render(
 );
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  // 如果是 SHOW_POPOVER 消息
   if (message.type === "SHOW_POPOVER") {
     const selection = window.getSelection().toString();
     setInputText(selection);
-    setTranslation("加载中...");
     // 获取选中区域的位置
     const area = getSelectionArea();
 
@@ -41,11 +39,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     document.removeEventListener("click", handleOutsideClick);
     // 监听文档点击事件，点击非气泡框区域时隐藏气泡框
     document.addEventListener("click", handleOutsideClick);
-  }
-
-  // 如果是 SHOW_TRANSLATION 消息
-  if (message.type === "SHOW_TRANSLATION" && popover) {
-    setTranslation(message.text);
   }
 });
 

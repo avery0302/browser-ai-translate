@@ -9,11 +9,34 @@
     align-items: center;
     justify-content: center;
 
-    img {
+    .imgBackground {
       height: 21px;
       width: 21px;
       cursor: pointer;
       background-color: #efefef;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      .speaker {
+        height: 21px;
+        width: 21px;
+      }
+
+      .loading {
+        height: 18px;
+        width: 18px;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
     }
   }
 

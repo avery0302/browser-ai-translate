@@ -6,50 +6,65 @@ import voice from "@/assets/svg/voice.svg";
 import voiceChecked from "@/assets/svg/voiceChecked.svg";
 import translate from "@/assets/svg/translate.svg";
 import translateChecked from "@/assets/svg/translateChecked.svg";
+import { getTranslation, playGoogleTTS, playWebTTS } from "@/utils/tool.js";
 
 function Header() {
-  const { aiVoice, aiTranslate } = useStore();
-  const { setAIVoice, setAITranslate } = useStore.getState();
+  const { aiVoiceChecked, aiTranslateChecked, inputText } = useStore();
+  const {
+    setAIVoiceChecked,
+    setAITranslateChecked,
+    setTranslation,
+    setVoiceLoading,
+  } = useStore.getState();
 
-  useEffect(() => {}, []);
+  async function updateTranslation() {
+    setAITranslateChecked(!aiTranslateChecked);
+    const model = aiTranslateChecked
+      ? "google/gemma-3-4b-it:free"
+      : "openai/gpt-4.1-nano"; // aiTranslateChecked更新不及时
+    setTranslation("加载中...");
+    const translation = await getTranslation(inputText, model);
+    setTranslation(translation);
+  }
+
+  async function updateVoice() {
+    setVoiceLoading(true);
+    setAIVoiceChecked(!aiVoiceChecked);
+    if (!aiVoiceChecked) {
+      await playGoogleTTS(inputText);
+    } else {
+      await playWebTTS(inputText);
+    }
+    setVoiceLoading(false);
+  }
 
   return (
     <div className={styles.header}>
       <div className={styles.iconBox}>
         <img src={loge} alt="Logo" />
       </div>
-      <div
-        className={styles.voiceToggle}
-        onClick={() => {
-          setAIVoice(!aiVoice);
-        }}
-      >
+      <div className={styles.voiceToggle} onClick={updateVoice}>
         <img
-          style={{ display: aiVoice ? "none" : "block" }}
+          style={{ display: aiVoiceChecked ? "none" : "block" }}
           src={voice}
-          title="普通发音"
+          title="机器发音"
         ></img>
         <img
-          style={{ display: aiVoice ? "block" : "none" }}
+          style={{ display: aiVoiceChecked ? "block" : "none" }}
           src={voiceChecked}
-          title="ai发音"
+          title="google发音"
         ></img>
       </div>
-      <div
-        className={styles.translateToggle}
-        onClick={() => {
-          setAITranslate(!aiTranslate);
-        }}
-      >
+      <div className={styles.translateToggle} onClick={updateTranslation}>
         <img
-          style={{ display: aiTranslate ? "none" : "block" }}
+          style={{ display: aiTranslateChecked ? "none" : "block" }}
           src={translate}
-          title="普通翻译"
+          title="gemma翻译"
         ></img>
         <img
-          style={{ display: aiTranslate ? "block" : "none" }}
+          style={{ display: aiTranslateChecked ? "block" : "none" }}
           src={translateChecked}
-          title="ai翻译"
+          title="openai翻译"
         ></img>
       </div>
       <div
