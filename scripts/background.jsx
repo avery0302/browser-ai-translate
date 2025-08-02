@@ -1,14 +1,14 @@
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: "text-translate",
-    title: "AI语义翻译",
+    title: "一键AI翻译",
     contexts: ["selection"],
   });
 
   chrome.contextMenus.create({
     id: "screenshot-translate",
-    title: "截图翻译",
-    contexts: ["page"],
+    title: "截图AI翻译",
+    contexts: ["page", "image", "link"],
   });
 });
 

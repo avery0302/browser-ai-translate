@@ -4,7 +4,7 @@ import useStore from "@/store/store";
 import App from "@/App.jsx";
 import Tesseract from "tesseract.js";
 
-const { setInputText, setTranslation } = useStore.getState();
+const { setInputText } = useStore.getState();
 
 // 创建popover节点
 window.popover = document.createElement("div");
@@ -33,27 +33,30 @@ let startX = 0;
 let startY = 0;
 let screenshotData = null;
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message) => {
   if (message.type === "TEXT_TRANSLATE") {
     const selection = window.getSelection().toString();
-    setInputText(selection);
-    // 获取选中区域的位置
     const area = getSelectionArea();
-
-    popover.style.left = `${area.left + area.width / 2 - 175}px`;
-    popover.style.top = `${area.top + area.height + 10}px`;
-    popover.style.display = "block";
-
-    // 可选：移除点击事件监听器，防止内存泄漏
-    document.removeEventListener("click", handleOutsideClick);
-    // 监听文档点击事件，点击非气泡框区域时隐藏气泡框
-    document.addEventListener("click", handleOutsideClick);
+    showPopover(selection, area);
   } else if (message.type === "SCREEN_TRANSLATE") {
     // 创建截图框选模式
     screenshotData = message.screenshotData;
     startScreenshotSelection();
   }
 });
+
+function showPopover(selection, area) {
+  setInputText(selection);
+
+  popover.style.left = `${area.left + area.width / 2 - 175}px`;
+  popover.style.top = `${area.top + area.height + 10}px`;
+  popover.style.display = "block";
+
+  // 可选：移除点击事件监听器，防止内存泄漏
+  document.removeEventListener("click", handleOutsideClick);
+  // 监听文档点击事件，点击非气泡框区域时隐藏气泡框
+  document.addEventListener("click", handleOutsideClick);
+}
 
 // 获取选中区域的位置信息
 function getSelectionArea() {
@@ -231,6 +234,7 @@ async function processScreenshotWithOCR(selectionRect) {
       const result = await Tesseract.recognize(blob, "eng+chi_sim");
 
       console.log("OCR识别结果:", result.data.text);
+      showPopover(result.data.text, selectionRect);
     }, "image/png");
   };
 
