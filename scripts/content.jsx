@@ -2,6 +2,7 @@ import React, { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import useStore from "@/store/store";
 import App from "@/App.jsx";
+import Tesseract from 'tesseract.js';
 
 const { setInputText, setTranslation } = useStore.getState();
 
@@ -39,6 +40,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     document.removeEventListener("click", handleOutsideClick);
     // 监听文档点击事件，点击非气泡框区域时隐藏气泡框
     document.addEventListener("click", handleOutsideClick);
+  } else if (message.type === "PREPARE_SCREENSHOT") {
+    // 创建截图框选模式
+    startScreenshotSelection();
+  } else if (message.type === "PROCESS_SCREENSHOT") {
+    // 处理截图并进行OCR识别
+    processScreenshotWithOCR(message.dataUrl, message.selectionRect);
   }
 });
 
@@ -75,4 +82,114 @@ function handleOutsideClick(event) {
     // 可选：移除点击事件监听器，防止内存泄漏
     document.removeEventListener("click", handleOutsideClick);
   }
+}
+
+// 框选相关变量
+let isSelecting = false;
+let selectionOverlay = null;
+let selectionBox = null;
+let startX = 0;
+let startY = 0;
+
+// 开始截图框选模式
+function startScreenshotSelection() {
+  // 创建遮罩层
+  selectionOverlay = document.createElement('div');
+  selectionOverlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.3);
+    cursor: crosshair;
+    z-index: 999999;
+    user-select: none;
+  `;
+  
+  // 创建选择框
+  selectionBox = document.createElement('div');
+  selectionBox.style.cssText = `
+    position: fixed;
+    border: 2px solid #00aaff;
+    background: rgba(0, 170, 255, 0.1);
+    display: none;
+    z-index: 1000000;
+    pointer-events: none;
+  `;
+  
+  // 添加到页面
+  document.body.appendChild(selectionOverlay);
+  document.body.appendChild(selectionBox);
+  
+  // 绑定鼠标事件
+  selectionOverlay.addEventListener('mousedown', handleMouseDown);
+  document.addEventListener('mousemove', handleMouseMove);
+  document.addEventListener('mouseup', handleMouseUp);
+}
+
+// 鼠标按下开始选择
+function handleMouseDown(e) {
+  isSelecting = true;
+  startX = e.clientX;
+  startY = e.clientY;
+  
+  selectionBox.style.left = startX + 'px';
+  selectionBox.style.top = startY + 'px';
+  selectionBox.style.width = '0px';
+  selectionBox.style.height = '0px';
+  selectionBox.style.display = 'block';
+}
+
+// 鼠标移动更新选择框
+function handleMouseMove(e) {
+  if (!isSelecting) return;
+  
+  const currentX = e.clientX;
+  const currentY = e.clientY;
+  
+  const left = Math.min(startX, currentX);
+  const top = Math.min(startY, currentY);
+  const width = Math.abs(currentX - startX);
+  const height = Math.abs(currentY - startY);
+  
+  selectionBox.style.left = left + 'px';
+  selectionBox.style.top = top + 'px';
+  selectionBox.style.width = width + 'px';
+  selectionBox.style.height = height + 'px';
+}
+
+// 鼠标松开完成选择
+function handleMouseUp(e) {
+  if (!isSelecting) return;
+  
+  isSelecting = false;
+  
+  const currentX = e.clientX;
+  const currentY = e.clientY;
+  
+  const left = Math.min(startX, currentX);
+  const top = Math.min(startY, currentY);
+  const width = Math.abs(currentX - startX);
+  const height = Math.abs(currentY - startY);
+  
+  // 获取选择区域（包含滚动偏移）
+  const selectionRect = {
+    left: left + window.scrollX,
+    top: top + window.scrollY,
+    width: width,
+    height: height
+  };
+  
+  console.log("选择区域:", selectionRect);
+  
+  // 清理界面
+  document.body.removeChild(selectionOverlay);
+  document.body.removeChild(selectionBox);
+  document.removeEventListener('mousemove', handleMouseMove);
+  document.removeEventListener('mouseup', handleMouseUp);
+  
+  // 重置变量
+  selectionOverlay = null;
+  selectionBox = null;
 }

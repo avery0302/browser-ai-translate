@@ -18,7 +18,7 @@
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-  "permissions": ["contextMenus", "scripting", "activeTab", "tabs"],
+  "permissions": ["contextMenus", "scripting", "activeTab", "tabs", "storage"],
   "background": {
     "service_worker": "scripts/background.js",
     "type": "module"
