@@ -230,11 +230,14 @@ async function processScreenshotWithOCR(selectionRect) {
 
     // 将裁剪后的图片转换为blob
     canvas.toBlob(async (blob) => {
-      // 使用Tesseract进行OCR识别
-      const result = await Tesseract.recognize(blob, "eng+chi_sim");
-
-      console.log("OCR识别结果:", result.data.text);
-      showPopover(result.data.text, selectionRect);
+      try {
+        const result = await Tesseract.recognize(blob, "eng+chi_sim");
+        console.log("OCR识别结果:", result.data.text);
+        showPopover(result.data.text, selectionRect);
+      } catch (e) {
+        console.error("OCR出错:", e);
+        showPopover("当前网站禁止ocr", selectionRect);
+      }
     }, "image/png");
   };
 
