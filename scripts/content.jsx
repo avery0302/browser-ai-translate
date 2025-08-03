@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import useStore from "@/store/store";
 import App from "@/App.jsx";
 import Tesseract from "tesseract.js";
+import { globalVar } from "@/store/globalVar";
 
 const { setInputText } = useStore.getState();
 
@@ -37,7 +38,9 @@ chrome.runtime.onMessage.addListener((message) => {
   if (message.type === "TEXT_TRANSLATE") {
     const selection = window.getSelection().toString();
     const area = getSelectionArea();
-    showPopover(selection, area);
+    console.log("@@@气泡位置", area);
+    showPopover(area);
+    setInputText(selection);
   } else if (message.type === "SCREEN_TRANSLATE") {
     // 创建截图框选模式
     screenshotData = message.screenshotData;
@@ -45,9 +48,7 @@ chrome.runtime.onMessage.addListener((message) => {
   }
 });
 
-function showPopover(selection, area) {
-  setInputText(selection);
-
+function showPopover(area) {
   popover.style.left = `${area.left + area.width / 2 - 175}px`;
   popover.style.top = `${area.top + area.height + 10}px`;
   popover.style.display = "block";
@@ -70,8 +71,9 @@ function getSelectionArea() {
   const rect = range.getBoundingClientRect();
 
   // 考虑滚动条的偏移
-  const scrollX = document.documentElement.scrollLeft;
-  const scrollY = document.documentElement.scrollTop;
+  const scrollX = window.scrollX;
+  const scrollY = window.scrollY;
+  console.log("@@@选中位置偏移", scrollX, scrollY);
 
   // 返回选中文本的左上角坐标（加上滚动偏移）
   return {
@@ -175,15 +177,25 @@ function handleMouseUp(e) {
   const width = Math.abs(currentX - startX);
   const height = Math.abs(currentY - startY);
 
-  // 获取选择区域（包含滚动偏移）
+  // 获取选择区域
   const selectionRect = {
+    left: left,
+    top: top,
+    width: width,
+    height: height,
+  };
+  // 获取气泡区域
+  const area = {
     left: left + window.scrollX,
     top: top + window.scrollY,
     width: width,
     height: height,
   };
-
-  console.log("选择区域:", selectionRect);
+  showPopover(area);
+  setInputText("加载中...");
+  console.log("@@@气泡位置", area);
+  console.log("@@@滚动偏移:x/y", window.scrollX, window.scrollY);
+  console.log("@@@选择区域:左/上/宽/高", selectionRect);
 
   // 清理界面
   document.body.removeChild(selectionOverlay);
@@ -200,22 +212,41 @@ function handleMouseUp(e) {
   screenshotData = null;
 }
 
+// 调用ocr.space API进行OCR识别
+async function recognizeWithOcrSpace(imageBlob) {
+  const formData = new FormData();
+  formData.append("apikey", globalVar.ocrSpaceApiKey);
+  formData.append("language", "eng");
+  formData.append("isOverlayRequired", "false");
+  formData.append("file", imageBlob, "screenshot.png");
+
+  const response = await fetch(globalVar.ocrSpaceUrl, {
+    method: "POST",
+    body: formData,
+  });
+
+  const result = await response.json();
+  return result.ParsedResults?.[0]?.ParsedText || "";
+}
+
 // 处理截图并进行OCR识别
 async function processScreenshotWithOCR(selectionRect) {
-  // 创建Canvas进行图片裁剪
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   const img = new Image();
 
   img.onload = async function () {
-    // 获取设备像素比，处理高分辨率屏幕
     const devicePixelRatio = window.devicePixelRatio || 1;
-
-    // 设置canvas尺寸为选中区域大小
     canvas.width = selectionRect.width * devicePixelRatio;
     canvas.height = selectionRect.height * devicePixelRatio;
+    console.log("@@@原始图片:宽/高", img.width, img.height);
+    console.log(
+      "@@@截取图片:宽/高/像素比",
+      canvas.width,
+      canvas.height,
+      devicePixelRatio,
+    );
 
-    // 裁剪选中区域
     ctx.drawImage(
       img,
       selectionRect.left * devicePixelRatio,
@@ -228,18 +259,29 @@ async function processScreenshotWithOCR(selectionRect) {
       canvas.height,
     );
 
-    // 将裁剪后的图片转换为blob
+    const base64 = canvas.toDataURL();
+    // console.log("@@@处理后截图base64", base64);
+
     canvas.toBlob(async (blob) => {
       try {
         const result = await Tesseract.recognize(blob, "eng+chi_sim");
-        console.log("OCR识别结果:", result.data.text);
-        showPopover(result.data.text, selectionRect);
+        const recognizedText = result.data.text.trim();
+        console.log("@@@Tesseract识别", recognizedText);
+        setInputText(recognizedText);
       } catch (e) {
-        console.error("OCR出错:", e);
-        showPopover("当前网站禁止ocr", selectionRect);
+        console.warn("ocr失败，尝试降级方案");
+        const ocrResult = await recognizeWithOcrSpace(blob);
+        if (ocrResult) {
+          console.log("@@@ocrSpace识别", ocrResult);
+          setInputText(ocrResult);
+        } else {
+          console.log("@@@ocrSpace识别失败");
+          setInputText("当前网站禁止ocr");
+        }
       }
     }, "image/png");
   };
 
+  // console.log("@@@原始截图base64", screenshotData);
   img.src = screenshotData;
 }

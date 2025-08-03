@@ -25,7 +25,8 @@
   },
   "host_permissions": [
     "http://localhost:3000/",
-    "https://translate.ruskcode.top/"
+    "https://translate.ruskcode.top/",
+    "https://api.ocr.space/"
   ],
   "content_scripts": [
     {

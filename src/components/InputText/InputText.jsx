@@ -1,25 +1,19 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import useStore from "@/store/store.js";
 import styles from "./InputText.module.scss";
 import voice from "@/assets/svg/voice.svg";
 import loading from "@/assets/svg/loading.svg";
-import { getTranslation, playGoogleTTS, playWebTTS } from "@/utils/tool.js";
+import { getTranslation, playGoogleTTS } from "@/utils/tool.js";
 import { globalVar } from "@/store/globalVar.js";
 
 function InputText() {
-  const { inputText, aiVoiceChecked, aiTranslateChecked, voiceLoading } =
-    useStore();
+  const { inputText, aiTranslateChecked, voiceLoading } = useStore();
   const { setTranslation, setVoiceLoading } = useStore.getState();
   const inputTextRef = useRef(null);
-  const [state, setState] = useState({});
 
   async function playTTS() {
     setVoiceLoading(true);
-    if (aiVoiceChecked) {
-      await playGoogleTTS(inputText);
-    } else {
-      await playWebTTS(inputText);
-    }
+    await playGoogleTTS(inputText);
     setVoiceLoading(false);
   }
 

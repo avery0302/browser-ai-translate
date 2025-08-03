@@ -16,7 +16,8 @@ export async function getTTS(text, langCode, langName) {
 }
 
 export async function getTranslation(text, model) {
-  if (!text.trim() || text === "当前网站禁止ocr") return;
+  if (!text.trim() || text === "当前网站禁止ocr" || text === "加载中...")
+    return;
 
   const response = await fetch("https://translate.ruskcode.top/api/translate", {
     method: "POST",
@@ -48,9 +49,6 @@ function detectLanguage(text) {
 }
 
 export function playWebTTS(inputText) {
-  if (inputText === "当前网站禁止ocr") {
-    return;
-  }
   return new Promise((resolve, reject) => {
     speechSynthesis.cancel();
 
@@ -95,7 +93,7 @@ export function playWebTTS(inputText) {
 }
 
 export async function playGoogleTTS(inputText) {
-  if (inputText === "当前网站禁止ocr") {
+  if (inputText === "当前网站禁止ocr" || inputText === "加载中...") {
     return;
   }
 
@@ -118,5 +116,11 @@ export async function playGoogleTTS(inputText) {
   }
   const audio = new Audio(globalVar.audioUrl); // 一个实例只能播放一次
   audio.volume = 0.5;
-  await audio.play();
+  try {
+    await audio.play();
+  } catch (err) {
+    console.warn("音频播放失败，尝试降级方案");
+    // 调用你的备用 TTS
+    await playWebTTS(inputText);
+  }
 }

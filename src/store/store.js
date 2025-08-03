@@ -6,8 +6,6 @@ const useStore = create((set) => ({
   setInputText: (newText) => set({ inputText: newText }),
   translation: "",
   setTranslation: (newText) => set({ translation: newText }),
-  aiVoiceChecked: true,
-  setAIVoiceChecked: (newVal) => set({ aiVoiceChecked: newVal }),
   aiTranslateChecked: true,
   setAITranslateChecked: (newVal) => set({ aiTranslateChecked: newVal }),
   voiceLoading: false,
